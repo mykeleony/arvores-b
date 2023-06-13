@@ -28,8 +28,8 @@ bTree* createTree(char* fileName, bool mode) {
 	bTree* tree = malloc(sizeof(bTree));
 
 	if (tree == NULL) {
-		printf("Erro de alocacao de memoria.\n");
-		return NULL;
+        printf("Erro de alocacao de memoria.\n");
+        return NULL;
 	}
 
 	// Novo arquivo

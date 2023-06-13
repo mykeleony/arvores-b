@@ -47,11 +47,14 @@ bTree* createTree(char* fileName,bool mode);
 bTreeNode* nodeInit(bTreeNode* node,bool isLeaf,bTree* tree);
 void insert(bTree* tree,recordNode* record);
 void traverse(bTree* tree, int root);
+void hardPrint(bTree* tree);
+void doublePrint(bTree* tree);
 void dispNode(bTreeNode* node);
 void writeFile(bTree* ptr_tree, bTreeNode* p, int pos);
 void readFile(bTree* ptr_tree, bTreeNode* p, int pos);
 
-
+void splitChild(bTree* tree, bTreeNode* x, int i, bTreeNode* y);
+void insertNonFull(bTree* tree, bTreeNode* x, recordNode* record);
 void enterData(recordNode* record, int id_num, char country[], char Grate[], int Score, int Rate);
 recordNode* getData(char *filepath, int len);
 recordNode* search(bTree* tree, int key);
