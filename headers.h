@@ -4,7 +4,7 @@
  *
  * Primeiro semestre de 2023
  *
- * Parte 1 do EP 2 de AED-II: árvores B sem índices
+ * Parte 2 do EP 2 de AED-II: árvores B com índices
  *
  * Código de cabeçalho alterado: função declarada delete() não existe em implementation.c
  * Outras funções não declaradas foram adicionadas.
@@ -17,21 +17,22 @@
 
 // 1 , AFG , DIST , 93 , 18
 struct rec {
-	int key;
-	// rest
-	char country[5];
-	char grate[10];
-	int score;
-	int rate;
+    bool valid;
+    int codigoLivro;
+    char titulo[30];
+    char nomeCompletoPrimeiroAutor[30];
+    int anoPublicacao;
 };
 typedef struct rec recordNode;
 
 struct bTreeNode {
-	bool isLeaf;
-	int pos;
-	int noOfRecs;
-	recordNode* recordArr[2 * t - 1];
-	int children[2 * t];
+    bool valid; //indica se o nó da árvore B foi eliminado ou não
+    int noOfRecs;
+    bool isLeaf;
+    int pos;
+    int keyRecArr[2 * t - 1]; // chaves dos registros1
+    int posRecArr[2 * t - 1]; // posições dos registros no arquivo data.dat
+    int children[2 * t]; // posições das páginas filhas no arquivo tree.dat
 };
 typedef struct bTreeNode bTreeNode;
 
