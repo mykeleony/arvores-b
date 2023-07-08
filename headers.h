@@ -30,7 +30,7 @@ struct bTreeNode {
     int noOfRecs;
     bool isLeaf;
     int pos;
-    int keyRecArr[2 * t - 1]; // chaves dos registros1
+    int keyRecArr[2 * t - 1]; // chaves dos registros
     int posRecArr[2 * t - 1]; // posições dos registros no arquivo data.dat
     int children[2 * t]; // posições das páginas filhas no arquivo tree.dat
 };
@@ -56,7 +56,7 @@ void readFile(bTree* ptr_tree, bTreeNode* p, int pos);
 
 void splitChild(bTree* tree, bTreeNode* x, int i, bTreeNode* y);
 void insertNonFull(bTree* tree, bTreeNode* x, recordNode* record);
-void enterData(recordNode* record, int id_num, char country[], char Grate[], int Score, int Rate);
+void enterData(recordNode* record, int id_num, char titulo[], char nomeCompletoPrimeiroAutor[], int anoPublicacao);
 recordNode* getData(char *filepath, int len);
 recordNode* search(bTree* tree, int key);
 recordNode* searchRecursive(bTree* tree, int key, bTreeNode* root);

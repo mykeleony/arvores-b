@@ -33,38 +33,38 @@ bTree* createTree(char* fileName, bool mode) {
 	}
 
 	// Novo arquivo
-	if (!mode) {
-		strcpy(tree->fileName, fileName);
 
-		tree->fp = fopen(fileName, "w");
+    if (!mode) {
+        strcpy(tree->fileName, fileName);
 
-		if (tree->fp == NULL) {
-			printf("Erro ao criar o arquivo.\n");
-			free(tree);
-			return NULL;
-		}
+        tree->fp = fopen(fileName, "w");
 
-		fclose(tree->fp);
+        if (tree->fp == NULL) {
+            printf("Erro ao criar o arquivo.\n");
+            free(tree);
+            return NULL;
+        }
 
-		tree->root = 0;
-		tree->nextPos = 0;
-	}
+        fclose(tree->fp);
 
-	// Carrega arvore existente
-	else {
-		FILE* oldFile = fopen("tree.dat", "r");
+        tree->root = 0;
+        tree->nextPos = 0;
+    }
 
-		if (oldFile == NULL) {
-			printf("Erro ao abrir o arquivo existente.\n");
-			free(tree);
-			return NULL;
-		}
+        // Carrega arvore existente
+    else {
+        FILE* oldFile = fopen("tree.dat", "r");
 
-		fread(tree, sizeof(bTree), 1, oldFile);
-		fclose(oldFile);
-	}
+        if (oldFile == NULL) {
+            printf("Erro ao abrir o arquivo existente.\n");
+            free(tree);
+            return NULL;
+        }
 
-	tree->fp = fopen(fileName, "r+");
+        fread(tree, sizeof(bTree), 1, oldFile);
+        fclose(oldFile);
+    }
+    tree->fp = fopen(fileName, "r+");
 
 	if (tree->fp == NULL) {
 		printf("Erro ao abrir o arquivo.\n");
@@ -143,21 +143,19 @@ void readFile(bTree* ptr_tree, bTreeNode* p, int pos) {
     *
 	* @param record: ponteiro para o nó de registro onde os dados serão inseridos
 	* @param id_num: número de identificação a ser atribuído ao registro
-	* @param country: país a ser atribuído ao registro
-	* @param grate: avaliação a ser atribuída ao registro
-	* @param score: pontuação a ser atribuída ao registro
-	* @param rate: taxa a ser atribuída ao registro
+	* @param titulo: país a ser atribuído ao registro
+	* @param nomeCompletoPrimeiroAutor: avaliação a ser atribuída ao registro
+	* @param anoPublicacao: pontuação a ser atribuída ao registro
     *
 	* @return void.
     *
 	* @attention Modificações do código original: removido retorno redundante na última linha.
 */
-void enterData(recordNode* record, int id_num, char country[], char grate[], int score, int rate) {
-	record->key = id_num;
-	strcpy(record->country, country);
-	strcpy(record->grate, grate);
-	record->score = score;
-	record->rate = rate;
+void enterData(recordNode* record, int id_num, char titulo[], char nomeCompletoPrimeiroAutor[], int anoPublicacao) {
+	record->codigoLivro = id_num;
+	strcpy(record->titulo, titulo);
+	strcpy(record->nomeCompletoPrimeiroAutor, nomeCompletoPrimeiroAutor);
+	record->anoPublicacao = anoPublicacao;
 }
 
 /**
@@ -171,25 +169,25 @@ void enterData(recordNode* record, int id_num, char country[], char grate[], int
 	* @attention Modificações do código original: nenhuma modificação no código original foi necessária.
 */
 recordNode* getData(char *filepath, int len) {
-    recordNode *recordArr = malloc(sizeof(recordNode) * len);
+    recordNode *posRecArr = malloc(sizeof(recordNode) * len);
 
     char delim = ',';		// Registros devem estar separados por vírgula
     char line[256];
 
     int file_no = 0; // Contador de registros lidos do arquivo
-    int i, key, score, rate;
+    int i, codigoLivro, anoPublicacao;
 
-    char country[255];
-    char grate[255];
+    char titulo[255];
+    char nomeCompletoPrimeiroAutor[255];
 
     FILE *inpFile = fopen(filepath, "r");
 
-    while((file_no < len) && fscanf(inpFile, "%d,%[^,],%[^,],%d,%d", &key, country, grate, &score, &rate)) {
-      enterData(&recordArr[file_no], key, country, grate, score, rate);
+    while((file_no < len) && fscanf(inpFile, "%d,%[^,],%[^,],%d,%d", &codigoLivro, titulo, nomeCompletoPrimeiroAutor, &anoPublicacao)) {
+      enterData(&posRecArr[file_no], codigoLivro, titulo, nomeCompletoPrimeiroAutor, anoPublicacao);
       file_no++;
     }
 
-    return recordArr;
+    return posRecArr;
 }
 
 /**
@@ -213,7 +211,7 @@ void splitChild(bTree* tree, bTreeNode* x, int i, bTreeNode* y) {
 
     // Copia os registros da metade superior do nó y para o novo nó z
 	for(j = 0; j < (t - 1); j++) {
-		z->recordArr[j] = y->recordArr[j + t];
+		z->posRecArr[j] = y->posRecArr[j + t];
 	}
 
 	if(!y->isLeaf) {
@@ -235,11 +233,11 @@ void splitChild(bTree* tree, bTreeNode* x, int i, bTreeNode* y) {
 
     // Desloca as chaves do nó x para abrir espaço para a chave mediana
 	for(j = x->noOfRecs - 1; j >= i; j--) {
-		x->recordArr[j + 1] = x->recordArr[j];
+		x->posRecArr[j + 1] = x->posRecArr[j];
 	}
 
     // Insere a chave mediana no nó x
-	x->recordArr[i] = y->recordArr[t - 1];
+	x->posRecArr[i] = y->posRecArr[t - 1];
 	x->noOfRecs++;
 
     writeFile(tree, x, x->pos);
@@ -265,12 +263,12 @@ void insertNonFull(bTree* tree, bTreeNode* x, recordNode* record) {
 
 	if (x->isLeaf == true) {
         // Insere o novo registro no nó folha x mantendo a ordenação
-		while (i >= 0 && record->key < x->recordArr[i]->key) {
-            x->recordArr[i + 1] = x->recordArr[i];
+		while (i >= 0 && record->codigoLivro < x->posRecArr[i]->codigoLivro) {
+            x->posRecArr[i + 1] = x->posRecArr[i];
 			i--;
 		}
 
-		x->recordArr[i + 1] = record;
+		x->posRecArr[i + 1] = record;
 		x->noOfRecs++;
 
         writeFile(tree, x, x->pos);
@@ -278,7 +276,7 @@ void insertNonFull(bTree* tree, bTreeNode* x, recordNode* record) {
 
 	else {
         // Procura pelo filho apropriado para inserção
-		while (i >= 0 && record->key < x->recordArr[i]->key) {
+		while (i >= 0 && record->codigoLivro < x->posRecArr[i]->codigoLivro) {
 			i--;
 		}
 
@@ -290,7 +288,7 @@ void insertNonFull(bTree* tree, bTreeNode* x, recordNode* record) {
             // Filho está cheio e precisa ser dividido
 			splitChild(tree,x,i + 1,childAtPosi);
 
-			if (x->recordArr[i + 1]->key < record->key) {
+			if (x->posRecArr[i + 1]->codigoLivro < record->codigoLivro) {
 				i++;
 			}
 		}
@@ -319,7 +317,7 @@ void insert(bTree* tree, recordNode* record) {
 
 		bTreeNode* firstNode = malloc(sizeof(bTreeNode));
 		nodeInit(firstNode,true,tree);
-		firstNode->recordArr[0] = record;
+		firstNode->posRecArr[0] = record;
 		(firstNode->noOfRecs)++;
 
     writeFile(tree, firstNode, firstNode->pos);
@@ -346,7 +344,7 @@ void insert(bTree* tree, recordNode* record) {
 
 			int i = 0;
 
-			if (newRoot->recordArr[0]->key < record->key) {
+			if (newRoot->posRecArr[0]->codigoLivro < record->codigoLivro) {
 				i++;
 			}
 
@@ -414,12 +412,12 @@ void dispNode(bTreeNode* node) {
 	printf("Position in node:%d\n", node->pos );
   printf("Number of Records:%d\n", node->noOfRecs );
 	printf("Is leaf?:%d\n", node->isLeaf);
-	printf("Keys:\n");
+	printf("codigoLivros:\n");
 
 	int i;
 
 	for (i = 0; i < node->noOfRecs; i++) {
-		printf("%d ", node->recordArr[i]->key);
+		printf("%d ", node->posRecArr[i]->codigoLivro);
 	}
 
 	printf("\n");
@@ -437,23 +435,23 @@ void dispNode(bTreeNode* node) {
 	* Busca recursivamente e a partir de um nó arbitrário um registro com uma dada chave em uma árvore B.
     *
 	* tree: Ponteiro para a estrutura da árvore B.
-	* key: Chave do registro a ser encontrado.
+	* codigoLivro: Chave do registro a ser encontrado.
 	* root: Ponteiro para o nó origem da árvore.
     *
 	* @return Ponteiro para o registro encontrado com a chave especificada caso exista ou NULL caso contrário.
     *
 	* @attention Modificações do código original: nenhuma modificação no código original foi necessária.
 */
-recordNode* searchRecursive(bTree* tree, int key, bTreeNode* root) {
+recordNode* searchRecursive(bTree* tree, int codigoLivro, bTreeNode* root) {
 	int i = 0;
 
 	// Busca a posição correta para buscar o registro no nó atual
-	while (i < root->noOfRecs && key > root->recordArr[i]->key) {
+	while (i < root->noOfRecs && codigoLivro > root->posRecArr[i]->codigoLivro) {
 		i++;
 	}
 
-	if (i < root->noOfRecs && key == root->recordArr[i]->key) {
-		return root->recordArr[i];	// Registro foi encontrado
+	if (i < root->noOfRecs && codigoLivro == root->posRecArr[i]->codigoLivro) {
+		return root->posRecArr[i];	// Registro foi encontrado
 	}
 
 	else if (root->isLeaf) {
@@ -465,7 +463,7 @@ recordNode* searchRecursive(bTree* tree, int key, bTreeNode* root) {
 
 		readFile(tree, childAtPosi, root->children[i]);	// Lê o filho correspondente à posição encontrada e continua a busca recursiva nele
 
-		recordNode* found = searchRecursive(tree, key, childAtPosi);
+		recordNode* found = searchRecursive(tree, codigoLivro, childAtPosi);
 		free(childAtPosi);
 		return found;
 	}
@@ -475,18 +473,18 @@ recordNode* searchRecursive(bTree* tree, int key, bTreeNode* root) {
 	* @brief Busca o registro de uma árvore B a partir de uma chave de busca.
     *
 	* @param tree: ponteiro para a estrutura da árvore B.
-	* @param key: valor da chave a ser encontrada na árvore.
+	* @param codigoLivro: valor da chave a ser encontrada na árvore.
     *
     * @return o ponteiro para o nó que contém o valor buscado ou NULL caso o valor não seja encontrado.
     *
 	* @attention Modificações do código original: nenhuma modificação no código original foi necessária.
 */
-recordNode* search(bTree* tree, int key) {
+recordNode* search(bTree* tree, int codigoLivro) {
 	bTreeNode* root = malloc(sizeof(bTreeNode));
 
 	readFile(tree, root, tree->root);
 
-	recordNode* result = searchRecursive(tree, key, root);
+	recordNode* result = searchRecursive(tree, codigoLivro, root);
 
 	free(root);
 
@@ -503,10 +501,10 @@ recordNode* search(bTree* tree, int key) {
  *
  * @attention Modificações do código original: nenhuma modificação no código original foi necessária.
  */
-int findKey(bTreeNode* node, int k) {
+int findcodigoLivro(bTreeNode* node, int k) {
     int idx = 0;
 
-    while (idx < node->noOfRecs && node->recordArr[idx]->key < k) {
+    while (idx < node->noOfRecs && node->posRecArr[idx]->codigoLivro < k) {
         ++idx;
     }
 
@@ -529,7 +527,7 @@ void removeFromLeaf (bTree* tree, bTreeNode *node, int idx) {
 
     // Movimenta os registros seguintes para a esquerda para preencher o espaço do registro removido
     for (i = (idx + 1); i < node->noOfRecs; ++i) {
-	    node->recordArr[i - 1] = node->recordArr[i];
+	    node->posRecArr[i - 1] = node->posRecArr[i];
     }
 
     node->noOfRecs--;
@@ -547,7 +545,7 @@ void removeFromLeaf (bTree* tree, bTreeNode *node, int idx) {
  * @attention Modificações do código original: nenhuma modificação no código original foi necessária.
  */
 void removeFromNonLeaf(bTree* tree, bTreeNode *node, int idx) {
-    int k = node->recordArr[idx]->key;
+    int k = node->posRecArr[idx]->codigoLivro;
 
     bTreeNode *child = malloc(sizeof(bTreeNode));
     bTreeNode *sibling = malloc(sizeof(bTreeNode));
@@ -558,15 +556,15 @@ void removeFromNonLeaf(bTree* tree, bTreeNode *node, int idx) {
     // Caso 2.a: filho x possui ao menos t chaves
     if (child->noOfRecs >= t) {
         recordNode* pred = getPred(tree, node, idx);
-        node->recordArr[idx] = pred;
-        removeNode(tree, child, pred->key);
+        node->posRecArr[idx] = pred;
+        removeNode(tree, child, pred->codigoLivro);
     }
 
     // Caso 2.b: irmão y possui ao menos t chaves
     else if (sibling->noOfRecs >= t) {
         recordNode* succ = getSucc(tree, node, idx);
-        node->recordArr[idx] = succ;
-        removeNode(tree, sibling, succ->key);
+        node->posRecArr[idx] = succ;
+        removeNode(tree, sibling, succ->codigoLivro);
     }
 
     // Caso 2.c: ambos x e y possuem t-1 chaves
@@ -596,10 +594,10 @@ void removeFromNonLeaf(bTree* tree, bTreeNode *node, int idx) {
  * @attention Modificações do código original: cenário de chave inexistente @returnva "false", mas a função é void.
  */
 void removeNode(bTree* tree, bTreeNode* node, int k) {
-    int idx = findKey(node, k);
+    int idx = findcodigoLivro(node, k);
 
     // Verifica se a chave a ser removida está presente no nó
-    if (idx < node->noOfRecs && node->recordArr[idx]->key == k) {
+    if (idx < node->noOfRecs && node->posRecArr[idx]->codigoLivro == k) {
         if (node->isLeaf){
 	        removeFromLeaf(tree, node, idx);
         } else {
@@ -662,7 +660,7 @@ recordNode* getPred(bTree* tree, bTreeNode *node, int idx) {
         readFile(tree, curr, curr->children[curr->noOfRecs]);
     }
 
-    recordNode* result = curr->recordArr[curr->noOfRecs - 1];
+    recordNode* result = curr->posRecArr[curr->noOfRecs - 1];
 
     free(curr);
 
@@ -690,7 +688,7 @@ recordNode* getSucc(bTree* tree, bTreeNode *node, int idx) {
         readFile(tree, curr, curr->children[0]);
     }
 
-    recordNode* result = curr->recordArr[0];
+    recordNode* result = curr->posRecArr[0];
     free(curr);
 
     return result;
@@ -780,7 +778,7 @@ void borrowFromPrev(bTree* tree, bTreeNode *node, int idx) {
 
     // Desloca os registros do nó filho para a direita para liberar espaço para o novo registro
     for (i = child->noOfRecs - 1; i >= 0; --i) {
-        child->recordArr[i + 1] = child->recordArr[i];
+        child->posRecArr[i + 1] = child->posRecArr[i];
     }
 
     // Se o nó child não é uma folha, desloca os ponteiros dos filhos para a direita
@@ -790,7 +788,7 @@ void borrowFromPrev(bTree* tree, bTreeNode *node, int idx) {
         }
     }
 
-    child->recordArr[0] = node->recordArr[idx - 1];
+    child->posRecArr[0] = node->posRecArr[idx - 1];
 
     // Se o nó atual não é uma folha, atualiza o ponteiro do primeiro filho do nó filho
     if (!node->isLeaf) {
@@ -798,7 +796,7 @@ void borrowFromPrev(bTree* tree, bTreeNode *node, int idx) {
         sibling->children[sibling->noOfRecs] = -1;
     }
 
-    node->recordArr[idx - 1] = sibling->recordArr[sibling->noOfRecs-1];
+    node->posRecArr[idx - 1] = sibling->posRecArr[sibling->noOfRecs-1];
 
     child->noOfRecs++;
     sibling->noOfRecs--;
@@ -831,18 +829,18 @@ void borrowFromNext(bTree* tree, bTreeNode *node, int idx) {
     readFile(tree, child, node->children[idx]);
     readFile(tree, sibling, node->children[idx + 1]);
 
-    child->recordArr[(child->noOfRecs)] = node->recordArr[idx]; // Substitui o registro no nó filho pelo registro no nó atual.
+    child->posRecArr[(child->noOfRecs)] = node->posRecArr[idx]; // Substitui o registro no nó filho pelo registro no nó atual.
 
     if (!(child->isLeaf)) {
         child->children[(child->noOfRecs) + 1] = sibling->children[0];  // Atualiza o ponteiro para o filho no nó filho.
     }
 
-    node->recordArr[idx] = sibling->recordArr[0];
+    node->posRecArr[idx] = sibling->posRecArr[0];
 
     int i;
 
     for (i = 1; i < sibling->noOfRecs; ++i) {
-        sibling->recordArr[i - 1] = sibling->recordArr[i]; // Desloca os registros no próximo irmão.
+        sibling->posRecArr[i - 1] = sibling->posRecArr[i]; // Desloca os registros no próximo irmão.
     }
 
     if (!sibling->isLeaf) {
@@ -884,13 +882,13 @@ bTreeNode* merge(bTree* tree, bTreeNode *node, int idx) {
     readFile(tree, sibling, node->children[idx+1]);
 
     // Move o registro correspondente do nó pai para o nó filho
-    child->recordArr[t - 1] = node->recordArr[idx];
+    child->posRecArr[t - 1] = node->posRecArr[idx];
 
     int i;
 
     // Copia os registros do nó irmão para o nó filho
     for (i = 0; i < sibling->noOfRecs; ++i)
-        child->recordArr[i + t] = sibling->recordArr[i];
+        child->posRecArr[i + t] = sibling->posRecArr[i];
 
     // Atualiza os ponteiros dos filhos, se existirem
     if (!child->isLeaf) {
@@ -900,7 +898,7 @@ bTreeNode* merge(bTree* tree, bTreeNode *node, int idx) {
 
     // Move os registros e os ponteiros do nó pai
     for (i = (idx + 1); i < node->noOfRecs; ++i) {
-        node->recordArr[i - 1] = node->recordArr[i];
+        node->posRecArr[i - 1] = node->posRecArr[i];
     }
 
     for (i = (idx + 2); i <= node->noOfRecs; ++i) {
@@ -930,7 +928,7 @@ bTreeNode* merge(bTree* tree, bTreeNode *node, int idx) {
     * @brief Remove o registro com a chave especificada da árvore B.
     *
     * @param tree: ponteiro para a estrutura de árvore B
-    * @param key: valor da chave do registro a ser removido
+    * @param codigoLivro: valor da chave do registro a ser removido
     *
     * @return um booleano indicando se a remoção foi bem-sucedida.
     *
@@ -938,15 +936,15 @@ bTreeNode* merge(bTree* tree, bTreeNode *node, int idx) {
         - A linha "if(found);" estava seguida por um ponto e vírgula, fazendo com que a remoção fosse executada
         independentemente da existência do registro. O ponto e vírgula foi removido.
 */
-bool removeFromTree(bTree* tree, int key) {
+bool removeFromTree(bTree* tree, int codigoLivro) {
     bTreeNode *root = malloc(sizeof(bTreeNode));
 
     readFile(tree, root, tree->root);
 
-    bool found = search(tree, key);
+    bool found = search(tree, codigoLivro);
 
     if(found) {
-        removeNode(tree, root, key);
+        removeNode(tree, root, codigoLivro);
     }
 
     free(root);
